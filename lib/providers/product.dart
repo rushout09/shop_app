@@ -1,6 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 
-class Product with ChangeNotifier{
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:shop_app/models/http_exception.dart';
+
+class Product with ChangeNotifier {
   final String id;
   final String title;
   final String description;
@@ -16,8 +20,22 @@ class Product with ChangeNotifier{
     this.isFavorite = false,
   });
 
-  void toggleIsFavorite(){
+  Future<void> toggleIsFavorite() async {
+    final url = 'https://shopapp-46a87.firebaseio.com/products/$id.json';
     isFavorite = !isFavorite;
     notifyListeners();
+    final response = await http.patch(url,
+        body: json.encode({
+          'title': title,
+          'description': description,
+          'price': price,
+          'imageUrl': imageUrl,
+          'isFavorite': isFavorite,
+        }));
+    if (response.statusCode >= 400) {
+      isFavorite = !isFavorite;
+      notifyListeners();
+      throw HttpException('Could not complete request.');
+    }
   }
 }

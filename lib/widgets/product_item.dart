@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as prefix0;
 import 'package:provider/provider.dart';
 
 import '../screens/product_detail_screen.dart';
@@ -14,6 +15,7 @@ class ProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffold = Scaffold.of(context);
     final product = Provider.of<Product>(context, listen: false);
     final cart = Provider.of<Cart>(context, listen: false);
     return ClipRRect(
@@ -37,8 +39,18 @@ class ProductItem extends StatelessWidget {
             builder: (ctx, product, _) => IconButton(
               icon: Icon(
                   product.isFavorite ? Icons.favorite : Icons.favorite_border),
-              onPressed: () {
-                product.toggleIsFavorite();
+              onPressed: () async {
+                try{
+                  await product.toggleIsFavorite();
+                }
+                catch(error){
+                  scaffold.showSnackBar(SnackBar(
+                    content: Text(
+                      'Could not complete the action',
+                      textAlign: TextAlign.center,
+                    ),
+                  ));
+                }
               },
               color: Theme.of(context).accentColor,
             ),
@@ -51,6 +63,14 @@ class ProductItem extends StatelessWidget {
             icon: Icon(Icons.shopping_cart),
             onPressed: () {
               cart.addItem(product.id, product.price, product.title);
+              prefix0.Scaffold.of(context).hideCurrentSnackBar();
+              Scaffold.of(context).showSnackBar(SnackBar(
+                content: Text('Added item to cart',),
+                duration: Duration(seconds: 2),
+                action: SnackBarAction(label: 'UNDO', onPressed: (){
+                  cart.removeSingleItem(product.id);
+                },),
+              ));
             },
             color: Theme.of(context).accentColor,
           ),
