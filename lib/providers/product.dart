@@ -20,19 +20,24 @@ class Product with ChangeNotifier {
     this.isFavorite = false,
   });
 
-  Future<void> toggleIsFavorite() async {
-    final url = 'https://shopapp-46a87.firebaseio.com/products/$id.json';
+  Future<void> toggleIsFavorite(String authToken, String userId) async {
+    final url =
+        'https://shopapp-46a87.firebaseio.com/userFavorites/$userId/$id.json?auth=$authToken';
     isFavorite = !isFavorite;
     notifyListeners();
-    final response = await http.patch(url,
-        body: json.encode({
-          'title': title,
-          'description': description,
-          'price': price,
-          'imageUrl': imageUrl,
-          'isFavorite': isFavorite,
-        }));
-    if (response.statusCode >= 400) {
+    try {
+      final response = await http.put(
+        url,
+        body: json.encode(
+          isFavorite,
+        ),
+      );
+      if (response.statusCode >= 400) {
+        isFavorite = !isFavorite;
+        notifyListeners();
+        throw HttpException('Could not complete request.');
+      }
+    } catch (error) {
       isFavorite = !isFavorite;
       notifyListeners();
       throw HttpException('Could not complete request.');
